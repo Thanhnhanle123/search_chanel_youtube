@@ -29,7 +29,7 @@
 
         form {
             display: flex;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             margin-bottom: 30px;
         }
@@ -90,12 +90,10 @@
         .video-wrapper {
             cursor: pointer;
             position: relative;
-            max-width: 900px;
-            width: 100%;
+            max-width: 700px;
             border-radius: 8px;
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
             overflow: hidden;
-            margin: 0 auto;
         }
 
         .video-wrapper img {
@@ -198,8 +196,8 @@
                     wrapper.addEventListener('click', () => {
                         const videoId = wrapper.getAttribute('data-videoid');
                         const iframe = document.createElement('iframe');
-                        iframe.width = '900';
-                        iframe.height = '506'; // tỷ lệ 16:9
+                        iframe.width = '700';
+                        iframe.height = '394'; // tỉ lệ 16:9 với width 700
                         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
                         iframe.title = 'Video player';
                         iframe.frameBorder = '0';

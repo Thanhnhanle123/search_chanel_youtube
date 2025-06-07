@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify, render_template, request
 from yt_dlp import YoutubeDL
 
@@ -39,7 +41,7 @@ def get_videos():
                         "link": link
                     })
         else:
-            return jsonify([])  # Trả về mảng rỗng nếu ko có video
+            return jsonify([])  # Trả về mảng rỗng nếu không có video
 
         return jsonify(videos_data)
 
@@ -48,4 +50,5 @@ def get_videos():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
