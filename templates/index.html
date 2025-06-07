@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Lấy danh sách video YouTube</title>
+    <style>
+        /* Reset cơ bản */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #1e40af;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #1e40af;
+            border-radius: 6px 0 0 6px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.5);
+        }
+
+        button {
+            background-color: #2563eb;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 0 6px 6px 0;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+
+        #result {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        #result h2 {
+            margin-top: 0;
+        }
+
+        #result div.video-item {
+            margin-bottom: 30px;
+        }
+
+        #result div.video-item h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #1e40af;
+        }
+
+        .video-wrapper {
+            cursor: pointer;
+            position: relative;
+            max-width: 900px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .video-wrapper img {
+            width: 100%;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .video-wrapper div.play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            color: white;
+            opacity: 0.8;
+            pointer-events: none;
+            user-select: none;
+            text-shadow: 0 0 8px rgba(0,0,0,0.7);
+        }
+
+        p {
+            font-size: 16px;
+            text-align: center;
+        }
+
+        p[style*="color:red"] {
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            form {
+                flex-direction: column;
+            }
+            input[type="text"], button {
+                border-radius: 6px;
+                width: 100%;
+                margin: 5px 0;
+            }
+            .video-wrapper {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Nhập URL kênh YouTube để lấy danh sách video</h1>
+    <form id="channelForm">
+        <input type="text" name="channel_url" id="channel_url" placeholder="Nhập URL kênh YouTube" required />
+        <button type="submit">Lấy video</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('channelForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.innerHTML = '<p>Đang tải dữ liệu...</p>';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/get_videos', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `<p style="color:red;">Lỗi: ${errorData.error}</p>`;
+                    return;
+                }
+
+                const videos = await response.json();
+                if (videos.length === 0) {
+                    resultDiv.innerHTML = '<p>Không có video nào.</p>';
+                    return;
+                }
+
+                let html = '<h2>Danh sách video:</h2>';
+                for (const video of videos) {
+                    const videoId = video.link.split('v=')[1];
+                    html += `
+                    <div class="video-item">
+                        <h3>${video.lecture_number}. ${video.title}</h3>
+                        <div class="video-wrapper" data-videoid="${videoId}">
+                            <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="${video.title}" />
+                            <div class="play-button">▶</div>
+                        </div>
+                    </div>`;
+                }
+                resultDiv.innerHTML = html;
+
+                // Thêm sự kiện click để load iframe khi bấm
+                document.querySelectorAll('.video-wrapper').forEach(wrapper => {
+                    wrapper.addEventListener('click', () => {
+                        const videoId = wrapper.getAttribute('data-videoid');
+                        const iframe = document.createElement('iframe');
+                        iframe.width = '900';
+                        iframe.height = '506'; // tỷ lệ 16:9
+                        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                        iframe.title = 'Video player';
+                        iframe.frameBorder = '0';
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                        iframe.allowFullscreen = true;
+
+                        wrapper.innerHTML = '';
+                        wrapper.appendChild(iframe);
+                    });
+                });
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color:red;">Lỗi khi lấy dữ liệu: ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
