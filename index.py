@@ -44,8 +44,8 @@ def get_videos():
         return jsonify(videos_data)
 
     except Exception as e:
-        return jsonify({"error": f"Lỗi khi lấy dữ liệu : {str(e)}"}), 500
+        return jsonify({"error": f"Lỗi khi lấy dữ liệu: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=False)
